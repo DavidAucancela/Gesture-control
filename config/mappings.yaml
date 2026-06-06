@@ -1,0 +1,11 @@
+# Formato: nombre_gesto: tipo_accion:payload
+# Tipos disponibles: key_press, key_hold, mouse_click, mouse_scroll, callback, none
+gestures:
+  punio:          none
+  mano_abierta:   key_press:space
+  señalar:        none
+  victoria:       key_press:ctrl+c
+  rock:           key_press:ctrl+z
+  pulgar_arriba:  key_press:volumeup
+  pulgar_abajo:   key_press:volumedown
+  ok:             mouse_click:left
