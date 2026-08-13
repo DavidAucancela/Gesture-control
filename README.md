@@ -2,7 +2,7 @@
 
 Real-time hand gesture detection and system control via webcam.
 
-Recognizes hand gestures (fist, open hand, point, victory, OK, rock, thumbs up/down, etc.)
+Recognizes hand gestures (fist, open hand, point, victory, OK, thumbs up/down, etc.)
 and maps them to configurable actions: keyboard shortcuts, mouse clicks, or custom callbacks.
 
 ## Supported gestures
@@ -13,10 +13,16 @@ and maps them to configurable actions: keyboard shortcuts, mouse clicks, or cust
 | Open hand | `mano_abierta` | Space key |
 | Point | `señalar` | none |
 | Victory | `victoria` | Ctrl+C |
-| Rock | `rock` | Ctrl+Z |
 | Thumbs up | `pulgar_arriba` | Volume up |
 | Thumbs down | `pulgar_abajo` | Volume down |
 | OK | `ok` | Mouse left click |
+| Three fingers | `tres` | none |
+| Four fingers | `cuatro` | none |
+
+> The trained ML classifier (`models/gesture_v1.pkl`) recognizes 7 of these
+> (all except `tres`/`cuatro`, which only exist in the rule-based fallback).
+> A "rock" gesture existed in earlier versions but was removed — it was
+> never part of the trained model's classes, so it could never actually fire.
 
 ## Requirements
 
@@ -66,10 +72,14 @@ Options:
 ```bat
 python main.py --camera 1       # use camera index 1
 python main.py --no-actions     # detection only, no keyboard/mouse
-python main.py --debug          # show wrist coordinate overlay
+python main.py --debug          # log wrist coordinates to the console
 ```
 
-Press **Q** to quit.
+`main.py` opens a desktop window (CustomTkinter) with the live camera feed
+on the left and a sidebar on the right: a camera selector, the current
+gesture (icon + finger states), a live FPS/gesture-frequency chart, and a
+button to edit gesture → action mappings without restarting the app. Close
+the window to quit.
 
 > **Camera not detected?** Try `--camera 1` or change `device_id` in `config/settings.yaml`.
 > If the image is slow to start, the `backend: dshow` setting (already default) uses Windows
@@ -82,10 +92,12 @@ Edit `config/mappings.yaml`:
 ```yaml
 gestures:
   victoria:   key_press:ctrl+c   # copy
-  rock:       key_press:ctrl+z   # undo
   señalar:    mouse_click:left   # left click
   punio:      none               # no action
 ```
+
+Or use the **"Editar mapeos de gestos…"** button in the app's sidebar to
+change these live, without editing YAML by hand.
 
 Available action types:
 
@@ -135,23 +147,36 @@ gesture-control/
 │   ├── capture.py        # Webcam capture (mirror mode, FPS tracking)
 │   ├── detector.py       # MediaPipe Hands wrapper
 │   ├── gestures.py       # Rule-based + ML gesture recognition
-│   ├── renderer.py       # Visual overlay (skeleton, labels, FPS)
 │   ├── actions.py        # Gesture -> action dispatcher with debounce
 │   ├── classifier.py     # ML classifier wrapper (optional)
-│   └── controllers/
-│       ├── keyboard.py   # pynput keyboard wrapper
-│       └── mouse.py      # pynput mouse wrapper
+│   ├── controllers/
+│   │   ├── keyboard.py   # pynput keyboard wrapper
+│   │   └── mouse.py      # pynput mouse wrapper
+│   ├── ui/
+│   │   └── camera_control.py  # Camera detection/selection
+│   └── gui/               # CustomTkinter desktop app
+│       ├── app.py          # Main window (GestureControlApp)
+│       ├── worker.py       # Background capture/detect/dispatch thread
+│       ├── video_panel.py  # Live camera feed widget
+│       ├── gesture_panel.py # Current-gesture icon/name/finger-state card
+│       ├── charts.py       # Live FPS + gesture-frequency chart
+│       ├── camera_bar.py   # Camera selector dropdown
+│       ├── mapping_editor.py # Gesture -> action editor dialog
+│       ├── icons.py        # Programmatic hand-icon generation
+│       ├── labels.py       # Gesture display names
+│       └── fonts.py        # UTF-8 font resolution helper
 ├── config/
-│   ├── settings.yaml     # Camera, MediaPipe, renderer settings
+│   ├── settings.yaml     # Camera, MediaPipe, GUI settings
 │   └── mappings.yaml     # Gesture -> action mappings
 ├── tests/
 │   ├── test_gestures.py  # Gesture recognition unit tests
 │   └── test_actions.py   # Dispatcher unit tests
 ├── tools/
 │   ├── collect_data.py   # Interactive data collection
+│   ├── camera_detector.py # Camera detection/testing utility
 │   └── train.py          # Model training script
 ├── models/               # Trained model artifacts
-├── main.py               # Entry point
+├── main.py               # Entry point (launches the GUI)
 └── requirements.txt
 ```
 

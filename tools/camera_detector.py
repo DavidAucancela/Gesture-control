@@ -126,7 +126,7 @@ def main() -> int:
     if working_cameras:
         print("\nUsage:")
         for idx in working_cameras:
-            print(f"  python main_enhanced.py --camera {idx}")
+            print(f"  python main.py --camera {idx}")
 
     return 0
 
