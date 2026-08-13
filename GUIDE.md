@@ -14,7 +14,7 @@ Opciones disponibles:
 |---|---|
 | `--camera 1` | Usa cámara con índice 1 (si la default no anda) |
 | `--no-actions` | Solo detecta, no ejecuta teclado/mouse |
-| `--debug` | Muestra coordenadas de muñeca en pantalla |
+| `--debug` | Registra coordenadas de muñeca en la consola |
 
 ---
 
@@ -24,12 +24,17 @@ Opciones disponibles:
 |---|---|
 | Mano abierta | `Space` |
 | Victoria ✌️ | `Ctrl+C` |
-| Rock 🤘 | `Ctrl+Z` (deshacer) |
 | Pulgar arriba 👍 | Subir volumen |
 | Pulgar abajo 👇 | Bajar volumen |
 | OK 👌 | Click izquierdo del mouse |
 | Puño | sin acción |
 | Señalar | sin acción |
+| Tres / Cuatro dedos | sin acción |
+
+> El clasificador ML entrenado (`models/gesture_v1.pkl`) reconoce 7 de estos
+> gestos (todos menos `tres`/`cuatro`, que solo existen en el sistema de
+> reglas). El gesto "Rock" de versiones anteriores se eliminó: nunca formó
+> parte de las clases del modelo entrenado, así que nunca se podía disparar.
 
 ---
 
@@ -165,7 +170,7 @@ config/
 src/
   gestures.py       ← lógica de reconocimiento (agregar gestos acá)
   actions.py        ← dispatcher gesto → acción
-  renderer.py       ← todo lo visual (landmarks, toast, FPS)
+  gui/              ← app de escritorio CustomTkinter (video, panel, gráfico, editor)
   controllers/
     keyboard.py     ← wrapper de teclado
     mouse.py        ← wrapper de mouse

@@ -23,10 +23,15 @@ class ActionDispatcher:
     """
 
     def __init__(self, mappings_path: str, cooldown_ms: int = _DEFAULT_COOLDOWN_MS) -> None:
+        self._path = mappings_path
         self._cooldown_ms = cooldown_ms
         self._last_dispatch: dict[str, float] = {}
         self._mappings: dict[str, str] = {}
         self._load_mappings(mappings_path)
+
+    def reload(self) -> None:
+        """Re-read the mappings file from disk (used by the GUI's live editor)."""
+        self._load_mappings(self._path)
 
     def _load_mappings(self, path: str) -> None:
         """Load gesture mappings from YAML file.

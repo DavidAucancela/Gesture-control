@@ -13,12 +13,10 @@ mediapipe:
   min_tracking_confidence: 0.65
   static_image_mode: false
 
-renderer:
-  show_landmarks: true
-  show_fps: true
-  show_gesture_label: true
-  font_scale: 0.9
-  overlay_alpha: 0.55
+gui:
+  theme: dark
+  window_width: 1280
+  window_height: 800
 
 logging:
   level: INFO
