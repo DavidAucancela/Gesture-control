@@ -69,12 +69,29 @@ class Renderer:
         self._overlay_alpha: float = float(settings.get("overlay_alpha", 0.55))
         self._toast_label: str = ""
         self._toast_ts: float = 0.0
+        self._show_info_panel: bool = settings.get("show_info_panel", True)
+        self._current_camera_name: str = "Default Camera"
+        self._gesture_history: list[str] = []
+        self._max_history = 10
+
+    def set_camera_name(self, name: str) -> None:
+        """Set the current camera name for display.
+
+        Args:
+            name: Camera name to display.
+        """
+        self._current_camera_name = name
 
     def notify_action(self, gesture_name: str, action_str: str) -> None:
         gesture_display = _ACTION_LABELS.get(gesture_name, gesture_name)
         action_display = _format_action(action_str)
         self._toast_label = f"{gesture_display}  ->  {action_display}"
         self._toast_ts = time.monotonic()
+        # Add to history
+        if gesture_name not in self._gesture_history:
+            self._gesture_history.append(gesture_name)
+            if len(self._gesture_history) > self._max_history:
+                self._gesture_history.pop(0)
 
     def draw(
         self,
@@ -130,8 +147,12 @@ class Renderer:
         # Action toast
         output = self._draw_action_toast(output)
 
+        # Info panel
+        if self._show_info_panel:
+            output = self._draw_info_panel(output, detection_result, gesture_results, fps)
+
         # Status bar at the bottom
-        status_text = "Q: salir  |  R: resetear"
+        status_text = "Q: salir  |  R: resetear  |  C: cambiar cámara  |  I: info"
         output = self._draw_status_bar(output, status_text)
 
         return output
@@ -231,4 +252,98 @@ class Renderer:
             _STATUS_TEXT_COLOR,
             1,
         )
+        return frame
+
+    def _draw_info_panel(
+        self,
+        frame: np.ndarray,
+        detection_result: DetectionResult,
+        gesture_results: list[GestureResult],
+        fps: float,
+    ) -> np.ndarray:
+        """Draw detailed information panel on the right side.
+
+        Args:
+            frame: BGR numpy array to draw on.
+            detection_result: DetectionResult from HandDetector.
+            gesture_results: List of GestureResult.
+            fps: Current FPS.
+
+        Returns:
+            Modified numpy array.
+        """
+        h, w = frame.shape[:2]
+        panel_width = 280
+        panel_x = w - panel_width - 10
+        panel_y = 30
+        line_height = 20
+        padding = 8
+
+        # Create overlay for panel background
+        overlay = frame.copy()
+        cv2.rectangle(
+            overlay,
+            (panel_x - padding, panel_y - padding),
+            (w - 10, h - 100),
+            _LABEL_BG_COLOR,
+            -1,
+        )
+        cv2.addWeighted(overlay, 0.85, frame, 0.15, 0, frame)
+
+        # Draw border
+        cv2.rectangle(
+            frame,
+            (panel_x - padding, panel_y - padding),
+            (w - 10, h - 100),
+            (255, 150, 0),
+            2,
+        )
+
+        y_pos = panel_y + 5
+        text_scale = 0.6
+        text_color = (200, 200, 200)
+        text_color_title = (0, 200, 255)
+
+        # Camera info
+        camera_text = f"Camera: {self._current_camera_name}"
+        cv2.putText(frame, camera_text, (panel_x, y_pos), _FONT, text_scale, text_color_title, 1)
+        y_pos += line_height
+
+        # Detection info
+        hands_count = len(detection_result.hands)
+        hands_text = f"Hands: {hands_count}/2"
+        cv2.putText(frame, hands_text, (panel_x, y_pos), _FONT, text_scale, text_color, 1)
+        y_pos += line_height
+
+        # Gesture details
+        if gesture_results:
+            y_pos += 5
+            cv2.putText(frame, "Gestures:", (panel_x, y_pos), _FONT, text_scale, text_color_title, 1)
+            y_pos += line_height
+            for gesture in gesture_results:
+                gesture_label = _ACTION_LABELS.get(gesture.name, gesture.name)
+                gesture_text = f"  {gesture.hand[0]}: {gesture_label}"
+                cv2.putText(frame, gesture_text, (panel_x, y_pos), _FONT, 0.5, text_color, 1)
+                y_pos += line_height
+
+                # Finger states
+                fingers = ["T", "I", "M", "R", "P"]
+                states = [("✓" if s else "✗") for s in gesture.fingers_up]
+                fingers_text = f"    Fingers: {' '.join(states)}"
+                cv2.putText(frame, fingers_text, (panel_x, y_pos), _FONT, 0.5, text_color, 1)
+                y_pos += line_height
+
+        # Statistics
+        y_pos += 5
+        cv2.putText(frame, "Stats:", (panel_x, y_pos), _FONT, text_scale, text_color_title, 1)
+        y_pos += line_height
+
+        fps_text = f"  FPS: {fps:.1f}"
+        cv2.putText(frame, fps_text, (panel_x, y_pos), _FONT, text_scale, text_color, 1)
+        y_pos += line_height
+
+        if self._gesture_history:
+            history_text = f"  Last: {self._gesture_history[-1]}"
+            cv2.putText(frame, history_text, (panel_x, y_pos), _FONT, text_scale, text_color, 1)
+
         return frame

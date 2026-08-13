@@ -17,6 +17,7 @@ renderer:
   show_landmarks: true
   show_fps: true
   show_gesture_label: true
+  show_info_panel: true
   font_scale: 0.9
   overlay_alpha: 0.55
 
