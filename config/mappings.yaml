@@ -1,12 +1,12 @@
 # Formato: nombre_gesto: tipo_accion:payload
 # Tipos disponibles: key_press, key_hold, mouse_click, mouse_scroll, none
 gestures:
-  punio:          none
-  mano_abierta:   key_press:space
-  señalar:        none
-  victoria:       key_press:ctrl+c
-  pulgar_arriba:  key_press:volumeup
-  pulgar_abajo:   key_press:volumedown
-  ok:             mouse_click:left
-  tres:           none
-  cuatro:         none
+  punio: none
+  mano_abierta: key_press:space
+  señalar: none
+  victoria: key_press:ctrl+c
+  pulgar_arriba: key_press:volumeup
+  pulgar_abajo: key_press:volumedown
+  ok: mouse_click:left
+  tres: none
+  cuatro: none
