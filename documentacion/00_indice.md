@@ -14,6 +14,7 @@
 | `04_pipeline_completo.md` | El flujo completo de datos desde la cámara hasta la acción del sistema, módulo por módulo |
 | `05_machine_learning.md` | Cómo funciona el clasificador Random Forest, entrenamiento, features, y cuándo usarlo |
 | `06_como_extender.md` | Guía práctica para agregar gestos, cambiar acciones y ajustar parámetros |
+| `07_interfaz_grafica.md` | La app de escritorio CustomTkinter: estructura de `src/gui/`, el contrato de threading (por qué pynput vive en el hilo principal), y el editor de mapeos con hot-reload |
 
 ---
 
@@ -32,17 +33,22 @@ HandDetector           ← MediaPipe detecta hasta 2 manos, devuelve 21 landmark
 recognize()            ← convierte landmarks en nombre de gesto (reglas o ML)
   │
   ▼
-ActionDispatcher       ← mapea nombre de gesto a acción, aplica debounce
+CaptureWorker          ← publica frame + gestos en una queue (hilo background)
   │
   ▼
-keyboard / mouse       ← pynput ejecuta la acción real en el sistema operativo
+GestureControlApp      ← consume la queue cada 33ms (hilo principal Tk)
+  │
+  ├─▶ VideoPanel / GesturePanel / FpsHistoryChart   (pintan la UI)
   │
   ▼
-Renderer               ← dibuja skeleton, label, FPS y toast sobre el frame
+ActionDispatcher       ← mapea gesto a acción, aplica debounce
   │
   ▼
-cv2.imshow()           ← muestra la ventana al usuario
+keyboard / mouse       ← pynput ejecuta la acción real (SOLO en el hilo principal)
 ```
+
+Ver `07_interfaz_grafica.md` para el detalle de por qué `ActionDispatcher`
+debe correr en el hilo principal y no en `CaptureWorker`.
 
 ---
 
@@ -57,3 +63,6 @@ cv2.imshow()           ← muestra la ventana al usuario
 | numpy | >= 1.26 | Álgebra lineal, arrays |
 | PyYAML | >= 6.0 | Carga de configuración |
 | pandas | — | Solo usado en `tools/train.py` para procesar CSV |
+| CustomTkinter | >= 5.2 | Ventana principal de la app de escritorio (`src/gui/`) |
+| matplotlib | >= 3.8 | Gráfico en vivo de FPS/gestos, embebido en la sidebar |
+| Pillow (PIL) | >= 10.0 | Conversión de frames a `PhotoImage` y generación de íconos de gesto |
